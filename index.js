@@ -422,8 +422,10 @@ Layout.ForceDirected.prototype.totalEnergy = function(timestep) {
 // start simulation
 Layout.ForceDirected.prototype.start = function(render, done) {
 	this._finished = false;
+	this._counter = 0;
 	while (!this._finished) {
 		this.computeStep(render);
+		this._counter++;
 	}
 	if (done) {
 		done(this);
@@ -438,13 +440,38 @@ Layout.ForceDirected.prototype.computeStep = function(callback) {
 	this.updatePosition(0.03);
 
 	// stop simulation when energy of the system goes below a threshold
-	if(this.totalEnergy() < 0.01) {
+	if(this.totalEnergy() < 0.1) {
 		this._finished = true;
 	}
 
-	if (callback && typeof callback === "function") {
-		callback(this);	
+	if (callback && typeof callback === "function" && (this._counter % 10) === 0) {
+		callback(this.formatOutput());	
 	}
+};
+
+Layout.ForceDirected.prototype.formatOutput = function() {
+	var nodeId, nodePoint;
+
+	var output = {
+		nodeMap: {},
+		edgeArray: []
+	};
+
+	for (nodeId in this.nodePoints){
+		if (this.nodePoints.hasOwnProperty(nodeId)) {
+			nodePoint = this.nodePoints[nodeId];
+			output.nodeMap[nodeId] = {
+				x: nodePoint.p.x,
+				y: nodePoint.p.y,
+				id: nodeId
+			};
+		}
+	}
+
+	_.each(this.graph.edges, function(e) {
+		output.edgeArray.push([e.source.id, e.target.id]);
+	});
+	return output;
 };
 
 // Find the nearest point to a particular position
@@ -497,7 +524,6 @@ Layout.ForceDirected.prototype.getBoundingBox = function() {
 		topright: topright.add(padding)
 	};
 };
-
 
 // Vector
 var Vector = function(x, y) {
