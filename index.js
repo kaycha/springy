@@ -270,9 +270,7 @@ Graph.prototype.generateLayout = function(config) {
 	var incremental = config.incremental;
 
 	var layout = new Layout.ForceDirected(this, stiffness, repulsion, damping);
-	layout.start(incremental);
-	util.log("layout edges:" + util.inspect(layout.edgeSprings, true, null));
-	util.log("layout nodes:" + util.inspect(layout.nodePoints, true, null));
+	layout.start((typeof incremental === "function") ? incremental : void 0);
 };
 
 // -----------
@@ -444,7 +442,7 @@ Layout.ForceDirected.prototype.computeStep = function(callback) {
 		this._finished = true;
 	}
 
-	if (callback) {
+	if (callback && typeof callback === "function") {
 		callback(this);	
 	}
 };
